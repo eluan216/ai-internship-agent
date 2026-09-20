@@ -1,21 +1,12 @@
 # AI Internship Agent
 
-A pure Python AI agent that finds and ranks live internship opportunities.
-
-## Status
-Private development repository.
+Python agent that finds and ranks live internship postings.
 
 ## Documentation
-- [Product Requirements Document (PRD)](./PRD.md)
+See [PRD.md](./PRD.md) for requirements.
 
-## Planned Features
-- Live internship search
-- Intelligent filtering & ranking
-- Markdown shortlist generation
-- Zero-dependency demo mode
-
-## Getting Started
-Coming soon.
+## Status
+Private development.
 
 ---
-Built and maintained by [eluan216](https://github.com/eluan216)
+eluan216
