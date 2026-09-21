@@ -1,18 +1,28 @@
-"""
-RemoteOK public API — second live source.
-
-Endpoint: https://remoteok.com/api
-No API key required. First row may be metadata; job rows include id/url/position.
-"""
+"""RemoteOK public API — second live source. No API key required."""
 
 from typing import List
 import hashlib
 import requests
 
 from agent.models import Listing, SearchQuery
-from agent.tools.search import _keyword_matches
 
 REMOTEOK_URL = "https://remoteok.com/api"
+
+
+def _keyword_matches(text: str, keywords) -> bool:
+    if not keywords:
+        return True
+    text = text.lower()
+    for k in keywords:
+        k = (k or "").lower().strip()
+        if not k:
+            continue
+        if k in text:
+            return True
+        parts = [p for p in k.split() if len(p) > 2]
+        if parts and all(p in text for p in parts):
+            return True
+    return False
 
 
 def _id_from(title: str, company: str, url: str) -> str:
@@ -44,7 +54,6 @@ class RemoteOKSource:
         for row in rows:
             if not isinstance(row, dict):
                 continue
-            # skip metadata banner row
             if "position" not in row and "title" not in row:
                 continue
 
@@ -66,7 +75,6 @@ class RemoteOKSource:
                     if not query.remote_ok:
                         continue
 
-            # prefer RemoteOK's own id when present
             rid = str(row.get("id") or "")
             lid = f"remoteok-{rid}" if rid else _id_from(title, company, url)
 

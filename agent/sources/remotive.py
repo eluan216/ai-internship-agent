@@ -5,9 +5,24 @@ import hashlib
 import requests
 
 from agent.models import Listing, SearchQuery
-from agent.tools.search import _keyword_matches
 
 REMOTIVE_URL = "https://remotive.com/api/remote-jobs"
+
+
+def _keyword_matches(text: str, keywords) -> bool:
+    if not keywords:
+        return True
+    text = text.lower()
+    for k in keywords:
+        k = (k or "").lower().strip()
+        if not k:
+            continue
+        if k in text:
+            return True
+        parts = [p for p in k.split() if len(p) > 2]
+        if parts and all(p in text for p in parts):
+            return True
+    return False
 
 
 def _id_from(title: str, company: str, url: str) -> str:
