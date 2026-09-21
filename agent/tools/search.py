@@ -90,6 +90,27 @@ def _id_from(title: str, company: str, url: str) -> str:
     return hashlib.sha1(raw).hexdigest()[:12]
 
 
+def _keyword_matches(text: str, keywords) -> bool:
+    """True if any keyword phrase matches the text.
+
+    A phrase matches if the full phrase appears, or (for multi-word phrases)
+    every token longer than 2 characters appears somewhere in the text.
+    """
+    if not keywords:
+        return True
+    text = text.lower()
+    for k in keywords:
+        k = (k or "").lower().strip()
+        if not k:
+            continue
+        if k in text:
+            return True
+        parts = [p for p in k.split() if len(p) > 2]
+        if parts and all(p in text for p in parts):
+            return True
+    return False
+
+
 def search_remotive(query: SearchQuery) -> List[Listing]:
     """Fetch remote jobs from Remotive public API and filter locally."""
     try:
@@ -99,7 +120,7 @@ def search_remotive(query: SearchQuery) -> List[Listing]:
     except Exception:
         return []
 
-    keywords = [k.lower() for k in query.keywords]
+    keywords = query.keywords or []
     results: List[Listing] = []
 
     for job in jobs:
@@ -112,11 +133,10 @@ def search_remotive(query: SearchQuery) -> List[Listing]:
         category = (job.get("category") or "").lower()
         text = f"{title} {company} {desc} {category} {' '.join(cats)}".lower()
 
-        if keywords and not any(k in text for k in keywords):
+        if keywords and not _keyword_matches(text, keywords):
             continue
         if query.location and query.location.lower() not in location.lower():
             if not (query.remote_ok and "remote" in location.lower()):
-                # still allow if keyword match is strong and remote_ok
                 if not query.remote_ok:
                     continue
 
@@ -140,11 +160,10 @@ def search_remotive(query: SearchQuery) -> List[Listing]:
 
 
 def search_demo(query: SearchQuery) -> List[Listing]:
-    keywords = [k.lower() for k in query.keywords] if query.keywords else []
     out = []
     for item in DEMO_LISTINGS:
         text = f"{item.title} {item.company} {item.description} {' '.join(item.tags)}".lower()
-        if keywords and not any(k in text for k in keywords):
+        if query.keywords and not _keyword_matches(text, query.keywords):
             continue
         if query.location and query.location.lower() not in item.location.lower():
             if not (query.remote_ok and "remote" in item.location.lower()):
@@ -159,5 +178,4 @@ def search_listings(query: SearchQuery, demo: bool = False) -> List[Listing]:
     live = search_remotive(query)
     if live:
         return live
-    # graceful fallback
     return search_demo(query)

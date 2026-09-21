@@ -24,7 +24,6 @@ def test_keyword_filter_excludes_unrelated():
 def test_location_remote():
     q = SearchQuery(keywords=["intern"], location="Remote", remote_ok=True, limit=10)
     results = search_demo(q)
-    assert all("remote" in r.location.lower() or True for r in results)  # remote_ok allows
     assert len(results) >= 1
 
 
@@ -36,7 +35,6 @@ def test_search_listings_demo_flag():
 
 
 def test_empty_keywords_still_runs():
-    q = SearchQuery(keywords=[], limit=5)
-    # empty keywords: demo returns all (no filter)
+    q = SearchQuery(keywords=[], limit=10)
     results = search_demo(q)
     assert len(results) == len(DEMO_LISTINGS)
