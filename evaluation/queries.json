@@ -1,26 +1,17 @@
 [
-  {
-    "id": "q1",
-    "keywords": ["machine learning", "internship"],
-    "location": "",
-    "remote_ok": true
-  },
-  {
-    "id": "q2",
-    "keywords": ["data science", "intern"],
-    "location": "",
-    "remote_ok": true
-  },
-  {
-    "id": "q3",
-    "keywords": ["cybersecurity", "internship"],
-    "location": "",
-    "remote_ok": true
-  },
-  {
-    "id": "q4",
-    "keywords": ["frontend", "react"],
-    "location": "",
-    "remote_ok": true
-  }
+  {"id": "exact_ml", "category": "exact", "keywords": ["machine learning", "internship"], "location": "", "remote_ok": true},
+  {"id": "exact_python", "category": "exact", "keywords": ["python", "internship"], "location": "", "remote_ok": true},
+  {"id": "skill_pytorch", "category": "skill", "keywords": ["pytorch", "internship"], "location": "", "remote_ok": true},
+  {"id": "skill_cv", "category": "skill", "keywords": ["computer vision", "internship"], "location": "", "remote_ok": true},
+  {"id": "skill_nlp", "category": "skill", "keywords": ["NLP", "internship"], "location": "", "remote_ok": true},
+  {"id": "broad_ai", "category": "broad", "keywords": ["AI", "internship"], "location": "", "remote_ok": true},
+  {"id": "broad_software", "category": "broad", "keywords": ["software", "internship"], "location": "", "remote_ok": true},
+  {"id": "broad_data", "category": "broad", "keywords": ["data", "internship"], "location": "", "remote_ok": true},
+  {"id": "constraint_remote_ml", "category": "constraint", "keywords": ["machine learning", "internship"], "location": "Remote", "remote_ok": true},
+  {"id": "constraint_remote_ds", "category": "constraint", "keywords": ["data science", "intern"], "location": "Remote", "remote_ok": true},
+  {"id": "multi_ml_research", "category": "multi-word", "keywords": ["machine learning", "research", "internship"], "location": "", "remote_ok": true},
+  {"id": "multi_dl_engineer", "category": "multi-word", "keywords": ["deep learning", "engineer", "internship"], "location": "", "remote_ok": true},
+  {"id": "multi_nlp_full", "category": "multi-word", "keywords": ["natural language processing", "internship"], "location": "", "remote_ok": true},
+  {"id": "exact_cyber", "category": "exact", "keywords": ["cybersecurity", "internship"], "location": "", "remote_ok": true},
+  {"id": "exact_ds", "category": "exact", "keywords": ["data science", "internship"], "location": "", "remote_ok": true}
 ]

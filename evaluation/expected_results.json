@@ -1,18 +1,17 @@
 {
-  "q1": {
-    "relevant_title_substrings": ["machine learning", "ml intern", "ai research"],
-    "irrelevant_title_substrings": ["marketing", "frontend"]
-  },
-  "q2": {
-    "relevant_title_substrings": ["data science", "data intern"],
-    "irrelevant_title_substrings": ["marketing", "cybersecurity"]
-  },
-  "q3": {
-    "relevant_title_substrings": ["cyber", "security"],
-    "irrelevant_title_substrings": ["marketing", "frontend"]
-  },
-  "q4": {
-    "relevant_title_substrings": ["frontend", "software engineering"],
-    "irrelevant_title_substrings": ["bioinformatics", "cybersecurity"]
-  }
+  "exact_ml": {"relevant_title_substrings": ["machine learning", "ml intern", "ai research"]},
+  "exact_python": {"relevant_title_substrings": ["python", "software engineering", "data science", "machine learning", "bioinformatics"]},
+  "skill_pytorch": {"relevant_title_substrings": ["ai research", "machine learning", "pytorch"]},
+  "skill_cv": {"relevant_title_substrings": ["computer vision", "vision", "ml"]},
+  "skill_nlp": {"relevant_title_substrings": ["nlp", "language", "machine learning", "ai research"]},
+  "broad_ai": {"relevant_title_substrings": ["ai", "machine learning", "research"]},
+  "broad_software": {"relevant_title_substrings": ["software"]},
+  "broad_data": {"relevant_title_substrings": ["data science", "data"]},
+  "constraint_remote_ml": {"relevant_title_substrings": ["machine learning", "ai research"]},
+  "constraint_remote_ds": {"relevant_title_substrings": ["data science"]},
+  "multi_ml_research": {"relevant_title_substrings": ["ai research", "machine learning"]},
+  "multi_dl_engineer": {"relevant_title_substrings": ["deep learning", "machine learning", "ai research"]},
+  "multi_nlp_full": {"relevant_title_substrings": ["nlp", "language", "machine learning"]},
+  "exact_cyber": {"relevant_title_substrings": ["cyber", "security"]},
+  "exact_ds": {"relevant_title_substrings": ["data science"]}
 }
