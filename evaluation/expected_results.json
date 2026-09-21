@@ -1,0 +1,18 @@
+{
+  "q1": {
+    "relevant_title_substrings": ["machine learning", "ml intern", "ai research"],
+    "irrelevant_title_substrings": ["marketing", "frontend"]
+  },
+  "q2": {
+    "relevant_title_substrings": ["data science", "data intern"],
+    "irrelevant_title_substrings": ["marketing", "cybersecurity"]
+  },
+  "q3": {
+    "relevant_title_substrings": ["cyber", "security"],
+    "irrelevant_title_substrings": ["marketing", "frontend"]
+  },
+  "q4": {
+    "relevant_title_substrings": ["frontend", "software engineering"],
+    "irrelevant_title_substrings": ["bioinformatics", "cybersecurity"]
+  }
+}

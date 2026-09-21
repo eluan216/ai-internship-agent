@@ -1,0 +1,26 @@
+[
+  {
+    "id": "q1",
+    "keywords": ["machine learning", "internship"],
+    "location": "",
+    "remote_ok": true
+  },
+  {
+    "id": "q2",
+    "keywords": ["data science", "intern"],
+    "location": "",
+    "remote_ok": true
+  },
+  {
+    "id": "q3",
+    "keywords": ["cybersecurity", "internship"],
+    "location": "",
+    "remote_ok": true
+  },
+  {
+    "id": "q4",
+    "keywords": ["frontend", "react"],
+    "location": "",
+    "remote_ok": true
+  }
+]

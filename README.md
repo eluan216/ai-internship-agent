@@ -1,27 +1,37 @@
 # AI Internship Agent
 
-Python agent that searches public internship/job listings, filters them, ranks matches, and writes a markdown shortlist you can act on.
+Python agent that searches public internship listings, filters them, ranks matches with **explainable scores**, caches results, and writes a markdown shortlist.
 
 **Learning / portfolio project.** It does not auto-apply and does not scrape login-walled sites.
 
 ---
 
-## What it does
+## Architecture
 
-1. **Search** – live listings from a public API (Remotive), or offline **demo** data
-2. **Filter** – keywords, location, remote preference
-3. **Rank** – transparent heuristic scores (title/keyword/internship signals)
-4. **Cache** – local JSON under `cache/`
-5. **Output** – clean markdown shortlist (stdout or file)
+```
+User query
+   ↓
+SearchQuery
+   ↓
+Search tool ── Remotive API (live)
+            └─ Demo fixtures (offline)
+   ↓
+Listing objects
+   ↓
+Heuristic ranker (scored + reasons)
+   ↓
+JSON cache
+   ↓
+Markdown shortlist (CLI)
+```
 
-No API key required for demo mode or for the default ranking path.
+Tools are independent so an LLM tool-calling layer can be added later without rewriting search/rank/cache.
 
 ---
 
 ## Quick start
 
 ```bash
-cd ai-internship-agent
 python -m venv .venv
 
 # Windows PowerShell
@@ -32,41 +42,43 @@ source .venv/bin/activate
 
 pip install -r requirements.txt
 
-# Offline demo (always works)
+# Offline demo (no API key, no network required)
 python cli.py --demo -k machine learning internship -n 5
 
-# Live search (needs network)
+# Live search
 python cli.py -k "data science" intern -l Remote -n 8 -o shortlist.md
 ```
 
 ---
 
-## CLI
+## Tests
 
-| Flag | Meaning |
-|------|---------|
-| `-k / --keywords` | One or more keywords |
-| `-l / --location` | Location substring |
-| `--no-remote` | Do not boost remote roles |
-| `-n / --limit` | Max items in shortlist |
-| `--demo` | Use built-in sample listings |
-| `-o / --output` | Write markdown to a file |
+```bash
+pip install pytest
+pytest tests/ -v
+```
+
+Coverage includes models, search filters, deterministic ranking, cache round-trip, markdown formatting, agent loop, and CLI.
 
 ---
 
-## Architecture
+## Ranking evaluation
 
-```
-cli.py
-  └── agent/loop.py          # search → rank → cache → format
-        ├── tools/search.py  # Remotive API + demo fixtures
-        ├── tools/rank.py    # heuristic ranking
-        ├── tools/format.py  # markdown shortlist
-        ├── cache.py         # local JSON cache
-        └── models.py        # Listing, SearchQuery
+```bash
+python evaluation/evaluate.py
 ```
 
-The loop is structured so an LLM tool-calling layer can be added later without changing the tools.
+Uses demo fixtures + labeled query expectations to report **Precision@K** and a determinism check. This is a small, honest benchmark — not fabricated marketing metrics.
+
+---
+
+## Explainable ranking
+
+Each shortlist item can include why it scored highly, for example:
+
+- title matches `machine learning`
+- internship-level role
+- remote position
 
 ---
 
@@ -74,14 +86,22 @@ The loop is structured so an LLM tool-calling layer can be added later without c
 
 - Results stay grounded in real or demo listings (no invented jobs)
 - Demo mode runs with zero credentials
+- Live API failure falls back to demo
 - No automatic applications
-- No scraping of authenticated job boards
 
 ---
 
 ## Status
 
-MVP scaffold complete: demo + live search, ranking, cache, markdown output.
+| Area | Status |
+|------|--------|
+| Demo + live search | Done |
+| Explainable heuristic ranker | Done |
+| Cache + markdown output | Done |
+| Automated tests | Done |
+| Ranking evaluation harness | Done |
+| Second job source | Next |
+| LLM tool-calling layer | Later (optional) |
 
 See [PRD.md](./PRD.md).
 

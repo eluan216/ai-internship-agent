@@ -1,10 +1,10 @@
-"""Markdown shortlist formatter."""
+"""Markdown shortlist formatter with optional rank explanations."""
 
 from typing import List
 from agent.models import Listing, SearchQuery
 
 
-def to_markdown(listings: List[Listing], query: SearchQuery) -> str:
+def to_markdown(listings: List[Listing], query: SearchQuery, explain: bool = True) -> str:
     lines = []
     lines.append("# Internship shortlist")
     lines.append("")
@@ -27,6 +27,11 @@ def to_markdown(listings: List[Listing], query: SearchQuery) -> str:
         if job.posted_at:
             lines.append(f"- **Posted:** {job.posted_at}")
         lines.append(f"- **Score:** {job.score:.1f}")
+        reasons = getattr(job, "_reasons", None)
+        if explain and reasons:
+            lines.append("- **Why this rank:**")
+            for r in reasons:
+                lines.append(f"  - {r}")
         lines.append(f"- **Link:** {job.url}")
         if job.description:
             snippet = job.description.replace("\n", " ").strip()
