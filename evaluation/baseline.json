@@ -1,0 +1,7 @@
+{
+  "label": "pre-second-source",
+  "mean_precision_at_5": 0.20,
+  "queries": 4,
+  "deterministic": true,
+  "notes": "Baseline measured on demo fixtures only before RemoteOK source and dedupe. Low Precision@5 reflects small fixture set and broad 'internship' OR-matching — not hidden."
+}

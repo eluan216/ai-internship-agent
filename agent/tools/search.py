@@ -1,93 +1,22 @@
 """
-Listing search tools.
+Listing search orchestration.
 
-Uses public, key-free sources where possible.
-Remotive (remote jobs API) is the primary live source.
-A curated demo set is used when offline or when --demo is set.
+Sources implement JobSource and return normalized Listing objects.
+Live mode merges Remotive + RemoteOK, then the caller deduplicates.
+Demo mode uses DemoSource only.
 """
 
 from typing import List
-import hashlib
-import requests
 
 from agent.models import Listing, SearchQuery
+from agent.sources.demo import DemoSource
+from agent.sources.remotive import RemotiveSource
+from agent.sources.remoteok import RemoteOKSource
 
-REMOTIVE_URL = "https://remotive.com/api/remote-jobs"
+# Re-export fixtures for tests / DemoSource
+from agent.sources.demo import DemoSource as _DS  # noqa: F401
 
-
-DEMO_LISTINGS = [
-    Listing(
-        id="demo-1",
-        title="Machine Learning Intern",
-        company="Northstar Health",
-        location="Remote",
-        url="https://example.com/jobs/ml-intern",
-        source="demo",
-        posted_at="2026-09-10",
-        description="Work on clinical NLP prototypes and evaluation pipelines.",
-        tags=["ml", "python", "nlp", "internship"],
-    ),
-    Listing(
-        id="demo-2",
-        title="Data Science Intern",
-        company="Rivian",
-        location="Irvine, CA",
-        url="https://example.com/jobs/ds-intern",
-        source="demo",
-        posted_at="2026-09-12",
-        description="Support analytics for manufacturing and vehicle telemetry.",
-        tags=["data science", "python", "sql", "internship"],
-    ),
-    Listing(
-        id="demo-3",
-        title="AI Research Intern",
-        company="University Lab Collaborations",
-        location="Remote",
-        url="https://example.com/jobs/ai-research",
-        source="demo",
-        posted_at="2026-09-08",
-        description="Literature review, experiment tracking, and model fine-tuning.",
-        tags=["ai", "research", "pytorch", "internship"],
-    ),
-    Listing(
-        id="demo-4",
-        title="Software Engineering Intern – Backend",
-        company="Fintech Startup",
-        location="New York, NY",
-        url="https://example.com/jobs/swe-backend",
-        source="demo",
-        posted_at="2026-09-15",
-        description="APIs, databases, and internal tooling in Python.",
-        tags=["software", "python", "backend", "internship"],
-    ),
-    Listing(
-        id="demo-5",
-        title="Cybersecurity Intern",
-        company="Regional Bank",
-        location="Hybrid – NYC",
-        url="https://example.com/jobs/cyber-intern",
-        source="demo",
-        posted_at="2026-09-05",
-        description="Assist with vulnerability assessment and security monitoring.",
-        tags=["security", "cyber", "internship"],
-    ),
-    Listing(
-        id="demo-6",
-        title="Bioinformatics Intern",
-        company="Biotech Research Group",
-        location="Boston, MA",
-        url="https://example.com/jobs/bioinfo",
-        source="demo",
-        posted_at="2026-09-14",
-        description="Genomics data pipelines and statistical analysis.",
-        tags=["bioinformatics", "python", "r", "internship"],
-    ),
-]
-
-
-def _id_from(title: str, company: str, url: str) -> str:
-    raw = f"{title}|{company}|{url}".encode("utf-8")
-    return hashlib.sha1(raw).hexdigest()[:12]
+DEMO_LISTINGS = None  # populated below after import cycle safe path
 
 
 def _keyword_matches(text: str, keywords) -> bool:
@@ -111,71 +40,100 @@ def _keyword_matches(text: str, keywords) -> bool:
     return False
 
 
-def search_remotive(query: SearchQuery) -> List[Listing]:
-    """Fetch remote jobs from Remotive public API and filter locally."""
-    try:
-        resp = requests.get(REMOTIVE_URL, timeout=20)
-        resp.raise_for_status()
-        jobs = resp.json().get("jobs", [])
-    except Exception:
-        return []
+# Demo listings live here so tests that import DEMO_LISTINGS keep working
+from agent.models import Listing as _L
 
-    keywords = query.keywords or []
-    results: List[Listing] = []
-
-    for job in jobs:
-        title = (job.get("title") or "").strip()
-        company = (job.get("company_name") or "").strip()
-        location = (job.get("candidate_required_location") or "Remote").strip()
-        url = (job.get("url") or "").strip()
-        desc = (job.get("description") or "")[:500]
-        cats = [str(c).lower() for c in (job.get("tags") or [])]
-        category = (job.get("category") or "").lower()
-        text = f"{title} {company} {desc} {category} {' '.join(cats)}".lower()
-
-        if keywords and not _keyword_matches(text, keywords):
-            continue
-        if query.location and query.location.lower() not in location.lower():
-            if not (query.remote_ok and "remote" in location.lower()):
-                if not query.remote_ok:
-                    continue
-
-        results.append(
-            Listing(
-                id=_id_from(title, company, url),
-                title=title or "Untitled",
-                company=company or "Unknown",
-                location=location or "Remote",
-                url=url,
-                source="remotive",
-                posted_at=job.get("publication_date"),
-                description=desc,
-                tags=cats[:8],
-            )
-        )
-        if len(results) >= query.limit * 3:
-            break
-
-    return results[: query.limit * 2]
+DEMO_LISTINGS = [
+    _L(
+        id="demo-1",
+        title="Machine Learning Intern",
+        company="Northstar Health",
+        location="Remote",
+        url="https://example.com/jobs/ml-intern",
+        source="demo",
+        posted_at="2026-09-10",
+        description="Work on clinical NLP prototypes and evaluation pipelines.",
+        tags=["ml", "python", "nlp", "internship"],
+    ),
+    _L(
+        id="demo-2",
+        title="Data Science Intern",
+        company="Rivian",
+        location="Irvine, CA",
+        url="https://example.com/jobs/ds-intern",
+        source="demo",
+        posted_at="2026-09-12",
+        description="Support analytics for manufacturing and vehicle telemetry.",
+        tags=["data science", "python", "sql", "internship"],
+    ),
+    _L(
+        id="demo-3",
+        title="AI Research Intern",
+        company="University Lab Collaborations",
+        location="Remote",
+        url="https://example.com/jobs/ai-research",
+        source="demo",
+        posted_at="2026-09-08",
+        description="Literature review, experiment tracking, and model fine-tuning.",
+        tags=["ai", "research", "pytorch", "internship"],
+    ),
+    _L(
+        id="demo-4",
+        title="Software Engineering Intern – Backend",
+        company="Fintech Startup",
+        location="New York, NY",
+        url="https://example.com/jobs/swe-backend",
+        source="demo",
+        posted_at="2026-09-15",
+        description="APIs, databases, and internal tooling in Python.",
+        tags=["software", "python", "backend", "internship"],
+    ),
+    _L(
+        id="demo-5",
+        title="Cybersecurity Intern",
+        company="Regional Bank",
+        location="Hybrid – NYC",
+        url="https://example.com/jobs/cyber-intern",
+        source="demo",
+        posted_at="2026-09-05",
+        description="Assist with vulnerability assessment and security monitoring.",
+        tags=["security", "cyber", "internship"],
+    ),
+    _L(
+        id="demo-6",
+        title="Bioinformatics Intern",
+        company="Biotech Research Group",
+        location="Boston, MA",
+        url="https://example.com/jobs/bioinfo",
+        source="demo",
+        posted_at="2026-09-14",
+        description="Genomics data pipelines and statistical analysis.",
+        tags=["bioinformatics", "python", "r", "internship"],
+    ),
+]
 
 
 def search_demo(query: SearchQuery) -> List[Listing]:
-    out = []
-    for item in DEMO_LISTINGS:
-        text = f"{item.title} {item.company} {item.description} {' '.join(item.tags)}".lower()
-        if query.keywords and not _keyword_matches(text, query.keywords):
-            continue
-        if query.location and query.location.lower() not in item.location.lower():
-            if not (query.remote_ok and "remote" in item.location.lower()):
-                continue
-        out.append(item)
-    return out[: query.limit]
+    return DemoSource().search(query)
+
+
+def search_remotive(query: SearchQuery) -> List[Listing]:
+    return RemotiveSource().search(query)
 
 
 def search_listings(query: SearchQuery, demo: bool = False) -> List[Listing]:
+    """Aggregate sources. Deduplication is applied by the agent loop."""
     if demo:
-        return search_demo(query)
-    live = search_remotive(query)
-    if live:
-        return live
-    return search_demo(query)
+        return DemoSource().search(query)
+
+    merged: List[Listing] = []
+    for source in (RemotiveSource(), RemoteOKSource()):
+        try:
+            merged.extend(source.search(query))
+        except Exception:
+            continue
+
+    if merged:
+        return merged
+    # graceful fallback
+    return DemoSource().search(query)

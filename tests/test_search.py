@@ -1,5 +1,6 @@
 from agent.models import SearchQuery
 from agent.tools.search import search_demo, search_listings, DEMO_LISTINGS
+from agent.tools.dedupe import deduplicate
 
 
 def test_demo_returns_listings():
@@ -38,3 +39,10 @@ def test_empty_keywords_still_runs():
     q = SearchQuery(keywords=[], limit=10)
     results = search_demo(q)
     assert len(results) == len(DEMO_LISTINGS)
+
+
+def test_demo_path_still_dedupes_cleanly():
+    q = SearchQuery(keywords=["internship"], limit=10)
+    raw = search_listings(q, demo=True)
+    unique = deduplicate(raw)
+    assert len(unique) == len(raw)  # demo fixtures already unique

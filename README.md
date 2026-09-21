@@ -1,6 +1,6 @@
 # AI Internship Agent
 
-Python agent that searches public internship listings, filters them, ranks matches with **explainable scores**, caches results, and writes a markdown shortlist.
+Python agent that searches public internship listings from **multiple sources**, normalizes them, **deduplicates**, ranks with **explainable scores**, caches results, and writes a markdown shortlist.
 
 **Learning / portfolio project.** It does not auto-apply and does not scrape login-walled sites.
 
@@ -9,23 +9,24 @@ Python agent that searches public internship listings, filters them, ranks match
 ## Architecture
 
 ```
-User query
-   ↓
 SearchQuery
-   ↓
-Search tool ── Remotive API (live)
-            └─ Demo fixtures (offline)
-   ↓
-Listing objects
-   ↓
-Heuristic ranker (scored + reasons)
-   ↓
-JSON cache
-   ↓
-Markdown shortlist (CLI)
+     │
+┌────┴────┐
+↓         ↓
+Remotive  RemoteOK   (+ Demo offline)
+│         │
+└────┬────┘
+     ↓
+Normalize → Listing
+     ↓
+Deduplicate (URL / title+company)
+     ↓
+Heuristic ranker + explanations
+     ↓
+JSON cache → markdown shortlist
 ```
 
-Tools are independent so an LLM tool-calling layer can be added later without rewriting search/rank/cache.
+Each source implements a common `JobSource` interface and returns the same `Listing` model. Ranking does not special-case any API.
 
 ---
 
@@ -33,52 +34,25 @@ Tools are independent so an LLM tool-calling layer can be added later without re
 
 ```bash
 python -m venv .venv
-
-# Windows PowerShell
-.\\.venv\Scripts\Activate.ps1
-
-# macOS / Linux
+# Windows: .\.venv\Scripts\Activate.ps1
 source .venv/bin/activate
-
 pip install -r requirements.txt
 
-# Offline demo (no API key, no network required)
-python cli.py --demo -k machine learning internship -n 5
-
-# Live search
-python cli.py -k "data science" intern -l Remote -n 8 -o shortlist.md
+python cli.py --demo -k "machine learning internship" -n 5
+python cli.py -k data science intern -n 8 -o shortlist.md
 ```
 
 ---
 
-## Tests
+## Tests & evaluation
 
 ```bash
-pip install pytest
 pytest tests/ -v
-```
-
-Coverage includes models, search filters, deterministic ranking, cache round-trip, markdown formatting, agent loop, and CLI.
-
----
-
-## Ranking evaluation
-
-```bash
 python evaluation/evaluate.py
 ```
 
-Uses demo fixtures + labeled query expectations to report **Precision@K** and a determinism check. This is a small, honest benchmark — not fabricated marketing metrics.
-
----
-
-## Explainable ranking
-
-Each shortlist item can include why it scored highly, for example:
-
-- title matches `machine learning`
-- internship-level role
-- remote position
+**Baseline (demo fixtures, before second source):** Mean Precision@5 = **0.20**  
+See `evaluation/baseline.json`. The score reflects a small fixture set and broad `internship` matching — documented, not optimized away.
 
 ---
 
@@ -86,7 +60,8 @@ Each shortlist item can include why it scored highly, for example:
 
 - Results stay grounded in real or demo listings (no invented jobs)
 - Demo mode runs with zero credentials
-- Live API failure falls back to demo
+- Live mode merges Remotive + RemoteOK; failures fall back to demo
+- Deduplication is deterministic (normalized URL, then title+company)
 - No automatic applications
 
 ---
@@ -95,13 +70,13 @@ Each shortlist item can include why it scored highly, for example:
 
 | Area | Status |
 |------|--------|
-| Demo + live search | Done |
-| Explainable heuristic ranker | Done |
-| Cache + markdown output | Done |
-| Automated tests | Done |
-| Ranking evaluation harness | Done |
-| Second job source | Next |
-| LLM tool-calling layer | Later (optional) |
+| JobSource interface | Done |
+| Remotive + RemoteOK + Demo | Done |
+| Deduplication | Done |
+| Explainable ranking | Done |
+| Tests | Done |
+| Evaluation + baseline | Done |
+| LLM / frontend / auto-apply | Out of scope |
 
 See [PRD.md](./PRD.md).
 
