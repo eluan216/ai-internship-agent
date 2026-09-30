@@ -1,128 +1,89 @@
 # AI Internship Agent
 
-A **tool-oriented job discovery and ranking system** that aggregates internship listings from multiple sources, normalizes and deduplicates results, ranks opportunities with an **explainable heuristic model**, and evaluates retrieval quality with reproducible Precision@K benchmarks.
+I built a tool-oriented internship discovery system that pulls listings from multiple sources, normalizes them into one model, removes duplicates, ranks with an explainable heuristic, and measures retrieval quality with Precision@K — including a mocked multi-source path that does not depend on the network.
 
-**Learning / portfolio project.** Not an auto-apply bot. Not an LLM wrapper. No login-walled scraping.
+This is engineering work by **eluan216**. It is not an auto-apply bot, not an LLM wrapper, and it does not scrape login-walled sites.
 
 ---
 
 ## Problem
 
-Internship search is fragmented across boards. Candidates need a short, ranked list they can act on — not invented jobs, not silent ranking, and not another opaque “AI” box.
+Internship search is fragmented. I wanted a shortlist I could trust: real postings, visible ranking reasons, and an evaluation story that survives a skeptical reviewer.
 
 ---
 
 ## Architecture
 
 ```
-                 SearchQuery
-                     │
-          ┌──────────┼──────────┐
-          ↓          ↓          ↓
-       Demo      Remotive    RemoteOK
-          │          │          │
-          └──────────┼──────────┘
-                     ↓
-                Normalize → Listing
-                     ↓
-                Deduplicate
-                     ↓
-                  Ranker
-                     ↓
-             Explainable score
-                     ↓
-               Cache + Markdown
+SearchQuery
+     │
+┌────┴────┬─────────┐
+▼         ▼         ▼
+Demo   Remotive  RemoteOK
+│         │         │
+└────┬────┴─────────┘
+     ▼
+Normalize → Listing
+     ▼
+Deduplicate (URL, then title+company)
+     ▼
+Heuristic rank + explanations
+     ▼
+Cache + markdown shortlist
 ```
 
-Each source implements a common `JobSource` interface and returns the same `Listing` model. Ranking does not special-case any API.
+Every source implements the same `JobSource` contract. Ranking code never special-cases an API.
 
 ---
 
-## Supported sources
+## What I optimized for
 
-| Source | Mode | Notes |
-|--------|------|--------|
-| Demo | Offline | Built-in fixtures for tests and demos |
-| Remotive | Live | Public remote-jobs API |
-| RemoteOK | Live | Public API, no key |
-
-Live mode merges Remotive + RemoteOK, then deduplicates. On total failure, falls back to demo.
-
----
-
-## Ranking methodology
-
-Transparent heuristic scores, for example:
-
-- title keyword match
-- description / tag match
-- internship-level role signal
-- remote preference
-- location preference
-
-Each shortlist item can include **why it ranked** (inspectable, not opaque).
+| Concern | Approach |
+|---------|----------|
+| Source failures | Live merge; total failure falls back to demo fixtures |
+| Duplicate postings | Deterministic dedupe before rank |
+| Opaque ranking | Each item can show score reasons |
+| Unstable live eval | Mocked multi-source suite in CI |
+| Overclaiming quality | Demo Precision@K baseline kept at 0.20 and explained |
 
 ---
 
-## Deduplication strategy
+## Evaluation
 
-1. Normalized URL (scheme + host + path; query stripped) when present  
-2. Else normalized `title + company`  
+| Suite | What it proves |
+|-------|----------------|
+| `evaluation/evaluate.py` | 15 demo queries; category breakdown; determinism |
+| `evaluation/evaluate_multisource.py` | Merge → dedupe → rank without network |
+| `evaluation/baseline.json` | Historical 4-query Precision@5 = 0.20 preserved |
 
-First occurrence wins (stable order). Same title at different companies is kept.
-
----
-
-## Evaluation methodology
-
-| Suite | Purpose |
-|-------|---------|
-| `evaluation/evaluate.py` | Demo fixtures, **15 queries** across exact / skill / broad / constraint / multi-word |
-| `evaluation/evaluate_multisource.py` | **Mocked** two-source merge → dedupe → rank (no network) |
-| `evaluation/baseline.json` | Historical 4-query baseline (Precision@5 = 0.20) — **unchanged** |
-
-Demo Precision@K reflects a small fixture set and broad `internship` matching. It is measured and documented, not optimized away.
-
-Multi-source quality is validated with mocks so results are reproducible without live API variance.
+I did not tune ranking just to inflate Precision@K. The low demo score is a property of a small fixture set and broad keyword matching; it is documented on purpose.
 
 ---
 
-## Quick start
+## Run
 
 ```bash
-python -m venv .venv
-# Windows: .\.venv\Scripts\Activate.ps1
-source .venv/bin/activate
 pip install -r requirements.txt
-
 python cli.py --demo -k "machine learning internship" -n 5
-python cli.py -k data science intern -n 8 -o shortlist.md
-
 pytest tests/ -v
 python evaluation/evaluate.py
 python evaluation/evaluate_multisource.py
 ```
 
-Example output: [`examples/machine-learning-shortlist.md`](examples/machine-learning-shortlist.md)
+Example shortlist: [`examples/machine-learning-shortlist.md`](examples/machine-learning-shortlist.md)
 
 ---
 
-## Limitations
+## Limits
 
-- Demo Precision@K is limited by fixture size and OR-style keyword matching
-- Live APIs can change shape or rate-limit; failures fall back to demo
-- Ranking is heuristic, not a trained learning-to-rank model
-- No auto-apply, no authenticated boards, no LLM tool-calling (by design)
+- Live boards change shape and rate limits  
+- Heuristic rank is not a learned ranking model  
+- No authentication, no apply automation, no LLM tool router in this freeze  
 
 ---
 
 ## Status
 
-Feature-complete for portfolio freeze of the deterministic agent.  
-Optional later path: LLM tool selection on top of the same tools — without rewriting sources, dedupe, or rank.
-
-See [PRD.md](./PRD.md).
-
----
+Frozen for portfolio presentation. CI runs tests, evaluation, and a demo CLI smoke path on every push to `main`.
 
 eluan216
